@@ -10,4 +10,4 @@ aiosqlite>=0.20.0
 asyncpg>=0.29.0
 
 # Minecraft RCON (async-native, no signal-based timeouts)
-aiomcrcon>=1.0.0
+aio-mc-rcon==3.4.2
