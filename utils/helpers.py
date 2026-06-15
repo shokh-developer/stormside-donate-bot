@@ -55,20 +55,19 @@ def status_badge(status: str) -> str:
 # Message templates
 # ──────────────────────────────────────────────────────────────────────────────
 
-def welcome_text(full_name: str, stats: str, nickname: str, clan: str = "None", rank: str = "Default") -> str:
+def welcome_text(full_name: str, stats: str, nickname: str, rank: str = "Default") -> str:
     status = "🟢 Online" if stats != "Offline" else "🔴 Offline"
     players = stats if stats != "Offline" else "0"
-    
+
     return (
         f"⚡️ <b>STROMESIDE</b>\n\n"
         f"👋 Salom, <b>{full_name}</b>\n\n"
         f"📌 <b>SERVER STATISTIKASI:</b>\n"
-        f"├ 🖥 IP: <code>mc.stremeside.uz</code>\n"
+        f"├ 🖥 IP: <code>mc.stormside.uz</code>\n"
         f"├ 📊 Holat: {status}\n"
         f"└ 👥 Oʻyinchilar: <b>{players}</b>\n\n"
         f"👤 <b>PROFILINGIZ:</b>\n"
         f"├ 🎮 Nik: <code>{nickname}</code>\n"
-        f"├ 🛡 Klan: <b>{clan}</b>\n"
         f"└ 🎖 Rank: <b>{rank}</b>\n\n"
         f"Botdan foydalanish uchun quyidagi menyuni tanlang 👇"
     )

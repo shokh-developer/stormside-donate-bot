@@ -1,5 +1,5 @@
 """
-handlers/start.py – /start command and profile management.
+handlers/start.py – /start command, profile management, and main-menu text handlers.
 """
 from __future__ import annotations
 
@@ -10,38 +10,45 @@ from aiogram import F, Router
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-from aiogram.types import CallbackQuery, Message, ContentType
+from aiogram.types import CallbackQuery, Message
 
 from config import config
 from db import repository as repo
 from keyboards import keyboards as kb
 from services.rcon_service import rcon
-from utils.helpers import profile_text, validate_mc_nickname, welcome_text
+from utils.helpers import (
+    STATUS_EMOJI, order_summary, profile_text, validate_mc_nickname, welcome_text
+)
 
 logger = logging.getLogger(__name__)
 router = Router(name="start")
 
+
 class NicknameForm(StatesGroup):
     waiting_for_nickname = State()
 
+
 async def get_server_stats() -> str:
-    """Fetch player count from Minecraft server via RCON."""
     try:
-        # Minecraft 'list' command usually returns: 
-        # "There are 2 of a max 20 players online: player1, player2"
         success, response = await rcon.send_command("list")
         if not success:
             return "Offline"
-            
-        # Ko'proq formatlarni qo'llab-quvvatlash uchun (masalan: 1/20 yoki 1 of a max of 20)
-        # re.search(r"(\d+)\D+(\d+)", response) birinchi kelgan ikkita sonni oladi
         match = re.search(r"(\d+)\D+(\d+)", response)
         if match:
             return f"{match.group(1)} / {match.group(2)}"
         return "Online"
-    except Exception as e:
-        logger.warning(f"Failed to fetch RCON stats: {e}")
+    except Exception as exc:
+        logger.warning("Failed to fetch RCON stats: %s", exc)
         return "Noma'lum"
+
+
+async def _build_welcome(user_id: int, full_name: str, mc_nickname: str | None) -> str:
+    stats = await get_server_stats()
+    nick = mc_nickname or "Bog'lanmagan"
+    rank = "Default"
+    if mc_nickname:
+        rank = await rcon.get_player_rank(mc_nickname)
+    return welcome_text(full_name, stats, nick, rank)
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -50,66 +57,84 @@ async def get_server_stats() -> str:
 
 @router.message(Command("start"))
 async def cmd_start(message: Message, db_user: dict) -> None:
-    stats = await get_server_stats()
-    nick = db_user.get('mc_nickname') or "Bog'lanmagan"
-    
-    clan = "None"
-    rank = "Default"
-    if db_user.get('mc_nickname'):
-        clan = await rcon.get_player_clan(db_user['mc_nickname'])
-        rank = await rcon.get_player_rank(db_user['mc_nickname'])
-
-    text = welcome_text(
-        message.from_user.full_name, 
-        stats, 
-        nick, 
-        clan, 
-        rank
+    text = await _build_welcome(
+        message.from_user.id,
+        message.from_user.full_name,
+        db_user.get("mc_nickname"),
     )
-    await message.answer(
-        text,
-        reply_markup=kb.main_menu(),
-    )
+    await message.answer(text, reply_markup=kb.main_menu())
 
 
 @router.callback_query(F.data == "home")
 async def cb_home(call: CallbackQuery, db_user: dict) -> None:
-    stats = await get_server_stats()
-    nick = db_user.get('mc_nickname') or "Bog'lanmagan"
-    
-    clan = "None"
-    rank = "Default"
-    if db_user.get('mc_nickname'):
-        clan = await rcon.get_player_clan(db_user['mc_nickname'])
-        rank = await rcon.get_player_rank(db_user['mc_nickname'])
-
-    text = welcome_text(
-        call.from_user.full_name, 
-        stats, 
-        nick, 
-        clan, 
-        rank
+    text = await _build_welcome(
+        call.from_user.id,
+        call.from_user.full_name,
+        db_user.get("mc_nickname"),
     )
-    
-    # Foto xabarlarda edit_text ishlamasligini oldini olish
-    if call.message.photo:
+    try:
         await call.message.delete()
-        await call.message.answer(text, reply_markup=kb.main_menu())
-    else:
-        try:
-            await call.message.edit_text(
-                text,
-                reply_markup=kb.main_menu(),
-            )
-        except Exception:
-            await call.message.answer(text, reply_markup=kb.main_menu())
-            await call.message.delete()
-            
+    except Exception:
+        pass
+    await call.message.answer(text, reply_markup=kb.main_menu())
     await call.answer()
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# Profile
+# Main-menu reply-keyboard handlers
+# ──────────────────────────────────────────────────────────────────────────────
+
+@router.message(F.text == "👤 Profil")
+async def msg_profile(message: Message, db_user: dict) -> None:
+    orders = await repo.get_user_orders(message.from_user.id, limit=100)
+    await message.answer(
+        profile_text(db_user, len(orders)),
+        parse_mode="HTML",
+        reply_markup=kb.profile_menu(has_nickname=bool(db_user.get("mc_nickname"))),
+    )
+
+
+@router.message(F.text == "📋 Buyurtmalar")
+async def msg_orders(message: Message) -> None:
+    orders = await repo.get_user_orders(message.from_user.id, limit=10)
+    if not orders:
+        text = (
+            "📋 <b>Buyurtmalar tarixi</b>\n\n"
+            "Sizda hali hech qanday buyurtma yo'q.\n"
+            "Do'kon bo'limiga o'ting!"
+        )
+    else:
+        lines = [f"📋 <b>Oxirgi {len(orders)} ta buyurtmalaringiz</b>\n"]
+        for o in orders:
+            emoji = STATUS_EMOJI.get(o["status"], "❓")
+            lines.append(
+                f"{emoji} <b>#{o['id']}</b>  {o.get('emoji', '🎮')} {o['product_name']}"
+                f"  — {o['created_at'][:10]}"
+            )
+        text = "\n".join(lines)
+    await message.answer(text, parse_mode="HTML", reply_markup=kb.back_home())
+
+
+@router.message(F.text == "ℹ️ Ma'lumotlar")
+async def msg_help(message: Message) -> None:
+    await message.answer(
+        "ℹ️ <b>Yordam va ko'p beriladigan savollar</b>\n\n"
+        "1️⃣ Profil bo'limida Minecraft Nicknameingizni bog'lang\n"
+        "2️⃣ Do'kondan Rank yoki tanga paketini tanlang\n"
+        "3️⃣ Click yoki Payme orqali to'lov qiling\n"
+        "4️⃣ To'lov chekini (screenshot) yuboring\n"
+        "5️⃣ Admin tekshiradi va buyurtmani tasdiqlaydi\n\n"
+        "━━━━━━━━━━━━━━━━━━━━\n"
+        "🌐 Server IP: <code>stormside.uz</code>\n"
+        "📞 Support: @shtursunov7\n"
+        "⏱ Rankni berish vaqti: odatda 1 soat ichida\n",
+        parse_mode="HTML",
+        reply_markup=kb.back_home(),
+    )
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Profile (callback – from inline menus)
 # ──────────────────────────────────────────────────────────────────────────────
 
 @router.callback_query(F.data == "profile")
@@ -165,8 +190,9 @@ async def receive_nickname(message: Message, state: FSMContext) -> None:
         reply_markup=kb.main_menu(),
     )
 
+
 # ──────────────────────────────────────────────────────────────────────────────
-# Order History
+# Order History (callback – from inline menus)
 # ──────────────────────────────────────────────────────────────────────────────
 
 @router.callback_query(F.data == "my_orders")
@@ -180,26 +206,21 @@ async def cb_my_orders(call: CallbackQuery) -> None:
             "Do'kon bo'limiga o'ting!"
         )
     else:
-        from utils.helpers import order_summary, STATUS_EMOJI
         lines = [f"📋 <b>Oxirgi {len(orders)} ta buyurtmalaringiz</b>\n"]
         for o in orders:
             emoji = STATUS_EMOJI.get(o["status"], "❓")
             lines.append(
-                f"{emoji} <b>#{o['id']}</b>  {o.get('emoji','🎮')} {o['product_name']}  "
-                f"— {o['created_at'][:10]}"
+                f"{emoji} <b>#{o['id']}</b>  {o.get('emoji', '🎮')} {o['product_name']}"
+                f"  — {o['created_at'][:10]}"
             )
         text = "\n".join(lines)
 
-    await call.message.edit_text(
-        text,
-        parse_mode="HTML",
-        reply_markup=kb.back_home(),
-    )
+    await call.message.edit_text(text, parse_mode="HTML", reply_markup=kb.back_home())
     await call.answer()
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# Help
+# Help (callback – from inline menus)
 # ──────────────────────────────────────────────────────────────────────────────
 
 @router.callback_query(F.data == "help")

@@ -24,13 +24,25 @@ class PromoState(StatesGroup):
     waiting_for_promo = State()
 
 
+@router.message(F.text == "🛒 Do'kon")
+async def msg_shop_main(message: Message) -> None:
+    await message.answer(
+        "🛒 <b>Stormside Do'koni</b>\n\n"
+        "Bugun nima sotib olishni xohlaysiz?\n\n"
+        "⚔️ <b>Ranklar</b> — Serverda doimiy imtiyozlarni oching\n"
+        "🤑 <b>SIDE (Vales)</b> — O'yin ichidagi valyuta paketlari",
+        parse_mode="HTML",
+        reply_markup=kb.shop_categories(),
+    )
+
+
 @router.callback_query(F.data == "shop:main")
 async def cb_shop_main(call: CallbackQuery) -> None:
     await call.message.edit_text(
         "🛒 <b>Stormside Do'koni</b>\n\n"
         "Bugun nima sotib olishni xohlaysiz?\n\n"
         "⚔️ <b>Ranklar</b> — Serverda doimiy imtiyozlarni oching\n"
-        "🪙 <b>Tangalar</b> — O'yin ichidagi valyuta paketlari",
+        "🤑 <b>SIDE (Vales)</b> — O'yin ichidagi valyuta paketlari",
         parse_mode="HTML",
         reply_markup=kb.shop_categories(),
     )

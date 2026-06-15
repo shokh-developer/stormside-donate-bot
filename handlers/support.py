@@ -20,24 +20,43 @@ class SupportState(StatesGroup):
 # Top Donators
 # ──────────────────────────────────────────────────────────────────────────────
 
-@router.callback_query(F.data == "top_donators")
-async def cb_top_donators(call: CallbackQuery) -> None:
+async def _top_donators_text() -> str:
     tops = await repo.get_top_donators()
     if not tops:
-        text = "🏆 <b>Hozircha top donaterlar yo'q.</b>\n\nBirinchi bo'lishingiz mumkin!"
-    else:
-        lines = ["🏆 <b>Top 10 Donaterlar:</b>\n", "━━━━━━━━━━━━━━━━━━━━"]
-        for i, user in enumerate(tops, 1):
-            nick = user['mc_nickname'] or "Nickname yo'q"
-            lines.append(f"{i}. <b>{nick}</b> — <code>{fmt_price(user['total_spent'])}</code>")
-        text = "\n".join(lines)
+        return "🏆 <b>Hozircha top donaterlar yo'q.</b>\n\nBirinchi bo'lishingiz mumkin!"
+    lines = ["🏆 <b>Top 10 Donaterlar:</b>\n", "━━━━━━━━━━━━━━━━━━━━"]
+    for i, user in enumerate(tops, 1):
+        nick = user['mc_nickname'] or "Nickname yo'q"
+        lines.append(f"{i}. <b>{nick}</b> — <code>{fmt_price(user['total_spent'])}</code>")
+    return "\n".join(lines)
 
+
+@router.message(F.text == "🏆 Top O'yinchilar")
+async def msg_top_donators(message: Message) -> None:
+    text = await _top_donators_text()
+    await message.answer(text, parse_mode="HTML", reply_markup=kb.back_home())
+
+
+@router.callback_query(F.data == "top_donators")
+async def cb_top_donators(call: CallbackQuery) -> None:
+    text = await _top_donators_text()
     await call.message.edit_text(text, parse_mode="HTML", reply_markup=kb.back_home())
     await call.answer()
 
 # ──────────────────────────────────────────────────────────────────────────────
 # User Ticket Flow
 # ──────────────────────────────────────────────────────────────────────────────
+
+@router.message(F.text == "✍️ Bog'lanish")
+async def msg_support_ticket(message: Message, state: FSMContext) -> None:
+    await state.set_state(SupportState.waiting_for_ticket)
+    await message.answer(
+        "✍️ <b>Adminga xabar yozing</b>\n\n"
+        "Muammo yoki savolingizni batafsil tushuntiring.",
+        parse_mode="HTML",
+        reply_markup=kb.back_home(),
+    )
+
 
 @router.callback_query(F.data == "support_ticket")
 async def cb_support_ticket(call: CallbackQuery, state: FSMContext) -> None:
