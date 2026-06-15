@@ -1,0 +1,13 @@
+# Aiogram - Telegram Bot Framework (v3.x)
+aiogram>=3.10.0
+
+# Environment variables
+python-dotenv>=1.0.1
+
+# Database (SQLite & PostgreSQL support)
+SQLAlchemy>=2.0.27
+aiosqlite>=0.20.0
+asyncpg>=0.29.0
+
+# Minecraft RCON
+mcrcon>=0.3.1

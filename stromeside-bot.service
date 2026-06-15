@@ -1,0 +1,17 @@
+[Unit]
+Description=Stromeside Telegram Donation Bot
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/opt/stromeside_bot
+ExecStart=/opt/stromeside_bot/.venv/bin/python main.py
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+EnvironmentFile=/opt/stromeside_bot/.env
+
+[Install]
+WantedBy=multi-user.target

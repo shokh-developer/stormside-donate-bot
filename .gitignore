@@ -1,0 +1,12 @@
+.env
+*.db
+*.sqlite
+logs/
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+assets/click_qr.png
+assets/payme_qr.png
+data/
