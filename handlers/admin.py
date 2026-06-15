@@ -658,7 +658,7 @@ async def cb_admin_revoke(call: CallbackQuery, bot: Bot) -> None:
         rcon_cmd = f"eco take {order['mc_nickname']} {order['coins_amount']}"
 
     # 2. Execute RCON
-    rcon_result = await rcon.send_command(rcon_cmd)
+    _, rcon_result = await rcon.send_command(rcon_cmd)
     
     # 3. Update database status
     await repo.update_order_status(
