@@ -1,9 +1,3 @@
-"""
-services/rcon_service.py – async RCON client for Minecraft.
-
-Uses aio-mc-rcon (pip: aio-mc-rcon, import: aiomcrcon) v3.4.2.
-Pure asyncio — no signal-based timeouts, safe inside aiogram handlers.
-"""
 from __future__ import annotations
 
 import logging
