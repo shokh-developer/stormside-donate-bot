@@ -3,6 +3,7 @@ handlers/start.py – /start command, profile management, and main-menu text han
 """
 from __future__ import annotations
 
+import asyncio
 import logging
 import re
 
@@ -43,11 +44,15 @@ async def get_server_stats() -> str:
 
 
 async def _build_welcome(user_id: int, full_name: str, mc_nickname: str | None) -> str:
-    stats = await get_server_stats()
     nick = mc_nickname or "Bog'lanmagan"
-    rank = "Default"
     if mc_nickname:
-        rank = await rcon.get_player_rank(mc_nickname)
+        stats, rank = await asyncio.gather(
+            get_server_stats(),
+            rcon.get_player_rank(mc_nickname),
+        )
+    else:
+        stats = await get_server_stats()
+        rank = "Default"
     return welcome_text(full_name, stats, nick, rank)
 
 
