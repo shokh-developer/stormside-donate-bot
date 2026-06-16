@@ -58,17 +58,18 @@ def shop_categories() -> InlineKeyboardMarkup:
         InlineKeyboardButton(text="🎁 Case'lar", callback_data="shop:cases"),
         InlineKeyboardButton(text="✔️ Unban", callback_data="shop:unban"),
     )
+    kb.row(InlineKeyboardButton(text="🏅 Ranklar xususiyatlari", callback_data="shop:rank_features"))
     kb.row(InlineKeyboardButton(text="🏠 Asosiy menyu", callback_data="home"))
     return kb.as_markup()
 
 
-def rank_list(ranks: List[Dict[str, Any]]) -> InlineKeyboardMarkup:
+def rank_list(ranks: List[Dict[str, Any]], prefix: str = "rank") -> InlineKeyboardMarkup:
     kb = InlineKeyboardBuilder()
     for r in ranks:
         kb.row(
             InlineKeyboardButton(
                 text=f"{r['emoji']} {r['name']}",
-                callback_data=f"rank:{r['lp_group']}",
+                callback_data=f"{prefix}:{r['lp_group']}",
             )
         )
     kb.row(
@@ -78,7 +79,9 @@ def rank_list(ranks: List[Dict[str, Any]]) -> InlineKeyboardMarkup:
     return kb.as_markup()
 
 
-def rank_duration(monthly: Dict[str, Any], permanent: Dict[str, Any]) -> InlineKeyboardMarkup:
+def rank_duration(
+    monthly: Dict[str, Any], permanent: Dict[str, Any], back_callback: str = "shop:ranks"
+) -> InlineKeyboardMarkup:
     kb = InlineKeyboardBuilder()
     kb.row(
         InlineKeyboardButton(
@@ -93,7 +96,7 @@ def rank_duration(monthly: Dict[str, Any], permanent: Dict[str, Any]) -> InlineK
         )
     )
     kb.row(
-        InlineKeyboardButton(text="⬅️ Orqaga", callback_data="shop:ranks"),
+        InlineKeyboardButton(text="⬅️ Orqaga", callback_data=back_callback),
         InlineKeyboardButton(text="🏠 Asosiy menyu", callback_data="home"),
     )
     return kb.as_markup()

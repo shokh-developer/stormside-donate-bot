@@ -88,54 +88,141 @@ CREATE TABLE IF NOT EXISTS admin_logs (
     note            TEXT,
     created_at      TEXT    DEFAULT (datetime('now'))
 );
+"""
 
--- Seed default products if none exist
-INSERT OR IGNORE INTO products (id, name, category, description, price, lp_group, coins_amount, duration_days, emoji)
-VALUES
-  -- ECLIPSE
-  (1,  'ECLIPSE (1 Oy)',      'rank', '🌑 1 oylik ECLIPSE ranki',          7000,   'eclipse',  NULL, 30, '🌑'),
-  (2,  'ECLIPSE (Butunlay)',  'rank', '🌑 Doimiy ECLIPSE ranki',           20000,  'eclipse',  NULL, 0,  '🌑'),
-  -- PHOENIX
-  (3,  'PHOENIX (1 Oy)',      'rank', '🛡 1 oylik PHOENIX ranki',          12000,  'phoenix',  NULL, 30, '🛡'),
-  (4,  'PHOENIX (Butunlay)',  'rank', '🛡 Doimiy PHOENIX ranki',           30000,  'phoenix',  NULL, 0,  '🛡'),
-  -- ORACLE
-  (5,  'ORACLE (1 Oy)',       'rank', '🪙 1 oylik ORACLE ranki',           18000,  'oracle',   NULL, 30, '🪙'),
-  (6,  'ORACLE (Butunlay)',   'rank', '🪙 Doimiy ORACLE ranki',            45000,  'oracle',   NULL, 0,  '🪙'),
-  -- VOYAGER
-  (7,  'VOYAGER (1 Oy)',      'rank', '⚒️ 1 oylik VOYAGER ranki',         25000,  'voyager',  NULL, 30, '⚒️'),
-  (8,  'VOYAGER (Butunlay)',  'rank', '⚒️ Doimiy VOYAGER ranki',          60000,  'voyager',  NULL, 0,  '⚒️'),
-  -- CATALYST
-  (9,  'CATALYST (1 Oy)',     'rank', '🔪 1 oylik CATALYST ranki',         35000,  'catalyst', NULL, 30, '🔪'),
-  (10, 'CATALYST (Butunlay)', 'rank', '🔪 Doimiy CATALYST ranki',          80000,  'catalyst', NULL, 0,  '🔪'),
-  -- CELESTIAL
-  (11, 'CELESTIAL (1 Oy)',    'rank', '💎 1 oylik CELESTIAL ranki',        50000,  'celestial',NULL, 30, '💎'),
-  (12, 'CELESTIAL (Butunlay)','rank', '💎 Doimiy CELESTIAL ranki',         110000, 'celestial',NULL, 0,  '💎'),
-  -- AURORA
-  (13, 'AURORA (1 Oy)',       'rank', '⚡️ 1 oylik AURORA ranki',           65000,  'aurora',   NULL, 30, '⚡️'),
-  (14, 'AURORA (Butunlay)',   'rank', '⚡️ Doimiy AURORA ranki',            145000, 'aurora',   NULL, 0,  '⚡️'),
-  -- IMMORTAL
-  (15, 'IMMORTAL (1 Oy)',     'rank', '⚡️ 1 oylik IMMORTAL ranki',         80000,  'immortal', NULL, 30, '⚡️'),
-  (16, 'IMMORTAL (Butunlay)', 'rank', '⚡️ Doimiy IMMORTAL ranki',          190000, 'immortal', NULL, 0,  '⚡️'),
-  -- APEX
-  (17, 'APEX (1 Oy)',         'rank', '🌟 1 oylik APEX ranki',             100000, 'apex',     NULL, 30, '🌟'),
-  (18, 'APEX (Butunlay)',     'rank', '🌟 Doimiy APEX ranki',              250000, 'apex',     NULL, 0,  '🌟'),
-  -- LUMINARY
-  (19, 'LUMINARY (1 Oy)',     'rank', '🤩 1 oylik LUMINARY ranki',         125000, 'luminary', NULL, 30, '🤩'),
-  (20, 'LUMINARY (Butunlay)', 'rank', '🤩 Doimiy LUMINARY ranki',          320000, 'luminary', NULL, 0,  '🤩'),
-  -- GREAT
-  (21, 'GREAT (1 Oy)',        'rank', '👑 1 oylik GREAT ranki',            150000, 'great',    NULL, 30, '👑'),
-  (22, 'GREAT (Butunlay)',    'rank', '👑 Doimiy GREAT ranki',             400000, 'great',    NULL, 0,  '👑'),
-  -- SIDE (Vales)
-  (23, '100 Vales',           'coins', '🤑 100 Vales — o''yin ichidagi valyuta',   10000,  NULL, 100,  0, '🤑'),
-  (24, '500 Vales',           'coins', '🤑 500 Vales — o''yin ichidagi valyuta',   45000,  NULL, 500,  0, '🤑'),
-  (25, '1000 Vales',          'coins', '🤑 1000 Vales — o''yin ichidagi valyuta',  85000,  NULL, 1000, 0, '🤑'),
-  (26, '2500 Vales',          'coins', '🤑 2500 Vales — o''yin ichidagi valyuta',  200000, NULL, 2500, 0, '🤑'),
-  -- Cases
-  (27, 'Donate Case',         'case',  '🎁 Donate Case — maxsus mukofotlar',       25000,  NULL, NULL, 0, '🎁'),
-  (28, 'Token Case',          'case',  '🎁 Token Case — token sovrinlar',          20000,  NULL, NULL, 0, '🎁'),
-  (29, 'Kit Case',            'case',  '🎁 Kit Case — asbob-uskunalar to''plami',  10000,  NULL, NULL, 0, '🎁'),
-  -- Unban
-  (30, 'UNBAN',               'unban', '✔️ Hisobingizni razblokirovka qiling',     30000,  NULL, NULL, 0, '✔️');
+
+def _rank_perks(*lines: str) -> str:
+    return "✅ Imkoniyatlar:\n\n" + "\n".join(f"• {line}" for line in lines)
+
+
+# (id, name, category, description, price, lp_group, coins_amount, duration_days, emoji)
+SEED_PRODUCTS = [
+    # Mist
+    (1,  "Mist (1 Oy)",      "rank", _rank_perks(
+        "/craft — Shaxsiy verstak", "/salary — Kunlik maosh", "/kits — Shaxsiy kit",
+        "2 ta home", "Auksionda 4 ta slot", "Maksimum 3 ta region",
+    ), 5000,   "mist",      None, 30, "🌫️"),
+    (2,  "Mist (Butunlay)",  "rank", _rank_perks(
+        "/craft — Shaxsiy verstak", "/salary — Kunlik maosh", "/kits — Shaxsiy kit",
+        "2 ta home", "Auksionda 4 ta slot", "Maksimum 3 ta region",
+    ), 20000,  "mist",      None, 0,  "🌫️"),
+    # Cloud
+    (3,  "Cloud (1 Oy)",     "rank", _rank_perks(
+        "Mist rankidagi barcha imkoniyatlar", "/anvil — Shaxsiy anvil",
+        "3 ta home", "Auksionda 5 ta slot", "Maksimum 3 ta region",
+    ), 8000,   "cloud",     None, 30, "☁️"),
+    (4,  "Cloud (Butunlay)", "rank", _rank_perks(
+        "Mist rankidagi barcha imkoniyatlar", "/anvil — Shaxsiy anvil",
+        "3 ta home", "Auksionda 5 ta slot", "Maksimum 3 ta region",
+    ), 30000,  "cloud",     None, 0,  "☁️"),
+    # Wind
+    (5,  "Wind (1 Oy)",      "rank", _rank_perks(
+        "Cloud rankidagi barcha imkoniyatlar", "/ptime — Shaxsiy vaqt", "/pweather — Shaxsiy ob-havo",
+        "3 ta home", "Auksionda 5 ta slot", "Maksimum 3 ta region",
+    ), 12000,  "wind",      None, 30, "🌬️"),
+    (6,  "Wind (Butunlay)",  "rank", _rank_perks(
+        "Cloud rankidagi barcha imkoniyatlar", "/ptime — Shaxsiy vaqt", "/pweather — Shaxsiy ob-havo",
+        "3 ta home", "Auksionda 5 ta slot", "Maksimum 3 ta region",
+    ), 45000,  "wind",      None, 0,  "🌬️"),
+    # Breeze
+    (7,  "Breeze (1 Oy)",      "rank", _rank_perks(
+        "Wind rankidagi barcha imkoniyatlar", "/time — O'yin vaqti", "/weather — O'yin ob-havosi",
+        "4 ta home", "Auksionda 5 ta slot", "Maksimum 3 ta region",
+    ), 18000,  "breeze",    None, 30, "🍃"),
+    (8,  "Breeze (Butunlay)",  "rank", _rank_perks(
+        "Wind rankidagi barcha imkoniyatlar", "/time — O'yin vaqti", "/weather — O'yin ob-havosi",
+        "4 ta home", "Auksionda 5 ta slot", "Maksimum 3 ta region",
+    ), 60000,  "breeze",    None, 0,  "🍃"),
+    # Thunder
+    (9,  "Thunder (1 Oy)",     "rank", _rank_perks(
+        "Breeze rankidagi barcha imkoniyatlar", "/eat — Ochlikni to'ldirish", "/head — O'yinchi boshini olish",
+        "5 ta home", "Auksionda 5 ta slot", "Maksimum 4 ta region",
+    ), 25000,  "thunder",   None, 30, "🌩️"),
+    (10, "Thunder (Butunlay)", "rank", _rank_perks(
+        "Breeze rankidagi barcha imkoniyatlar", "/eat — Ochlikni to'ldirish", "/head — O'yinchi boshini olish",
+        "5 ta home", "Auksionda 5 ta slot", "Maksimum 4 ta region",
+    ), 80000,  "thunder",   None, 0,  "🌩️"),
+    # Hurricane
+    (11, "Hurricane (1 Oy)",     "rank", _rank_perks(
+        "Thunder rankidagi barcha imkoniyatlar", "/heal — Jon va ochlikni to'ldirish", "/rtpdal — O'yinchilardan uzoq RTP",
+        "5 ta home", "Auksionda 6 ta slot", "Maksimum 4 ta region",
+    ), 35000,  "hurricane", None, 30, "🌀"),
+    (12, "Hurricane (Butunlay)", "rank", _rank_perks(
+        "Thunder rankidagi barcha imkoniyatlar", "/heal — Jon va ochlikni to'ldirish", "/rtpdal — O'yinchilardan uzoq RTP",
+        "5 ta home", "Auksionda 6 ta slot", "Maksimum 4 ta region",
+    ), 110000, "hurricane", None, 0,  "🌀"),
+    # Tornado
+    (13, "Tornado (1 Oy)",     "rank", _rank_perks(
+        "Hurricane rankidagi barcha imkoniyatlar", "/inv — Inventarni ko'rish", "/stack — Narsalarni stack qilish",
+        "6 ta home", "Auksionda 6 ta slot", "Maksimum 4 ta region",
+    ), 45000,  "tornado",   None, 30, "🌪️"),
+    (14, "Tornado (Butunlay)", "rank", _rank_perks(
+        "Hurricane rankidagi barcha imkoniyatlar", "/inv — Inventarni ko'rish", "/stack — Narsalarni stack qilish",
+        "6 ta home", "Auksionda 6 ta slot", "Maksimum 4 ta region",
+    ), 145000, "tornado",   None, 0,  "🌪️"),
+    # Tempest
+    (15, "Tempest (1 Oy)",     "rank", _rank_perks(
+        "Tornado rankidagi barcha imkoniyatlar",
+        "6 ta home", "Auksionda 6 ta slot", "Maksimum 5 ta region",
+    ), 55000,  "tempest",   None, 30, "🌊"),
+    (16, "Tempest (Butunlay)", "rank", _rank_perks(
+        "Tornado rankidagi barcha imkoniyatlar",
+        "6 ta home", "Auksionda 6 ta slot", "Maksimum 5 ta region",
+    ), 190000, "tempest",   None, 0,  "🌊"),
+    # Night
+    (17, "Night (1 Oy)",     "rank", _rank_perks(
+        "Tempest rankidagi barcha imkoniyatlar", "/salary+ — Sapphire valyutasida maxsus maosh",
+        "6 ta home", "Auksionda 6 ta slot", "Maksimum 6 ta region",
+    ), 170000, "night",     None, 30, "🌙"),
+    (18, "Night (Butunlay)", "rank", _rank_perks(
+        "Tempest rankidagi barcha imkoniyatlar", "/salary+ — Sapphire valyutasida maxsus maosh",
+        "6 ta home", "Auksionda 6 ta slot", "Maksimum 6 ta region",
+    ), 250000, "night",     None, 0,  "🌙"),
+    # Sun
+    (19, "Sun (1 Oy)",     "rank", _rank_perks(
+        "Night rankidagi barcha imkoniyatlar", "/kick — O'yinchini chiqarish (qoidalarga asosan)", "/repair all — Barcha narsalarni tuzatish",
+        "9 ta home", "Auksionda 9 ta slot", "Maksimum 9 ta region",
+    ), 90000,  "sun",       None, 30, "☀️"),
+    (20, "Sun (Butunlay)", "rank", _rank_perks(
+        "Night rankidagi barcha imkoniyatlar", "/kick — O'yinchini chiqarish (qoidalarga asosan)", "/repair all — Barcha narsalarni tuzatish",
+        "9 ta home", "Auksionda 9 ta slot", "Maksimum 9 ta region",
+    ), 320000, "sun",       None, 0,  "☀️"),
+    # Storm
+    (21, "Storm (1 Oy)",     "rank", "👑 Eng yuqori rank\n\n" + _rank_perks(
+        "Sun rankidagi barcha imkoniyatlar", "/ban — O'yinchilarga ban berish (qoidalarga asosan)",
+        "/elytrafly — Elytra bilan uchish", "Kuchli maxsus kit", "Maxsus rangli prefix",
+        "/salary+ — Sapphire valyutasida maxsus maosh", "15 ta home", "Auksionda 15 ta slot", "Maksimum 15 ta region",
+    ), 145000, "storm",     None, 30, "⚡"),
+    (22, "Storm (Butunlay)", "rank", "👑 Eng yuqori rank\n\n" + _rank_perks(
+        "Sun rankidagi barcha imkoniyatlar", "/ban — O'yinchilarga ban berish (qoidalarga asosan)",
+        "/elytrafly — Elytra bilan uchish", "Kuchli maxsus kit", "Maxsus rangli prefix",
+        "/salary+ — Sapphire valyutasida maxsus maosh", "15 ta home", "Auksionda 15 ta slot", "Maksimum 15 ta region",
+    ), 400000, "storm",     None, 0,  "⚡"),
+    # SIDE (Vales)
+    (23, "100 Vales",  "coins", "🤑 100 Vales — o'yin ichidagi valyuta",  10000,  None, 100,  0, "🤑"),
+    (24, "500 Vales",  "coins", "🤑 500 Vales — o'yin ichidagi valyuta",  45000,  None, 500,  0, "🤑"),
+    (25, "1000 Vales", "coins", "🤑 1000 Vales — o'yin ichidagi valyuta", 85000,  None, 1000, 0, "🤑"),
+    (26, "2500 Vales", "coins", "🤑 2500 Vales — o'yin ichidagi valyuta", 200000, None, 2500, 0, "🤑"),
+    # Cases
+    (27, "Donate Case", "case", "🎁 Donate Case — maxsus mukofotlar",      25000, None, None, 0, "🎁"),
+    (28, "Token Case",  "case", "🎁 Token Case — token sovrinlar",         20000, None, None, 0, "🎁"),
+    (29, "Kit Case",    "case", "🎁 Kit Case — asbob-uskunalar to'plami",  10000, None, None, 0, "🎁"),
+    # Unban
+    (30, "UNBAN", "unban", "✔️ Hisobingizni razblokirovka qiling", 30000, None, None, 0, "✔️"),
+]
+
+_UPSERT_PRODUCT_SQL = """
+INSERT INTO products (id, name, category, description, price, lp_group, coins_amount, duration_days, emoji)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+ON CONFLICT(id) DO UPDATE SET
+    name=excluded.name,
+    category=excluded.category,
+    description=excluded.description,
+    price=excluded.price,
+    lp_group=excluded.lp_group,
+    coins_amount=excluded.coins_amount,
+    duration_days=excluded.duration_days,
+    emoji=excluded.emoji
 """
 
 
@@ -144,5 +231,6 @@ async def init_db() -> None:
     async with get_db() as db:
         db.row_factory = aiosqlite.Row
         await db.executescript(SCHEMA)
+        await db.executemany(_UPSERT_PRODUCT_SQL, SEED_PRODUCTS)
         await db.commit()
     logger.info("Database ready.")

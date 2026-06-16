@@ -711,54 +711,6 @@ async def receive_kill_nickname(message: Message, state: FSMContext) -> None:
     await message.answer(f"RCON Natijasi: <code>{result}</code>", parse_mode="HTML", reply_markup=kb.admin_main())
 
 # ──────────────────────────────────────────────────────────────────────────────
-# Rank Setup Command
-# ──────────────────────────────────────────────────────────────────────────────
-
-@router.message(Command("setup_ranks"))
-@admin_required
-async def cmd_setup_ranks(message: Message) -> None:
-    """Bazani yangi ranklar bilan to'ldiradi."""
-    new_ranks = [
-        ("ECLIPSE", "🌑", 5000, 30, "eclipse"), ("ECLIPSE", "🌑", 20000, 0, "eclipse"),
-        ("PHOENIX", "🛡", 8000, 30, "phoenix"), ("PHOENIX", "🛡", 30000, 0, "phoenix"),
-        ("ORACLE", "🪙", 12000, 30, "oracle"), ("ORACLE", "🪙", 45000, 0, "oracle"),
-        ("VOYAGER", "⚒️", 18000, 30, "voyager"), ("VOYAGER", "⚒️", 60000, 0, "voyager"),
-        ("CATALYST", "🔪", 25000, 30, "catalyst"), ("CATALYST", "🔪", 80000, 0, "catalyst"),
-        ("CELESTIAL", "💎", 35000, 30, "celestial"), ("CELESTIAL", "💎", 110000, 0, "celestial"),
-        ("AURORA", "⚡️", 45000, 30, "aurora"), ("AURORA", "⚡️", 145000, 0, "aurora"),
-        ("IMMORTAL", "⚡️➕", 55000, 30, "immortal"), ("IMMORTAL", "⚡️➕", 190000, 0, "immortal"),
-        ("APEX", "🌟", 70000, 30, "apex"), ("APEX", "🌟", 250000, 0, "apex"),
-        ("LUMINARY", "🤩", 90000, 30, "luminary"), ("LUMINARY", "🤩", 320000, 0, "luminary"),
-        ("GREAT", "👑", 110000, 30, "great"), ("GREAT", "👑", 400000, 0, "great"),
-    ]
-
-    try:
-        # Yangi ranklarni qo'shish
-        count = 0
-        for name, emoji, price, days, lp in new_ranks:
-            duration_text = " (1 oy)" if days == 30 else " (Butunlay)"
-            await repo.add_product(
-                name=f"{name}{duration_text}",
-                category="rank",
-                price=float(price),
-                emoji=emoji,
-                lp_group=lp,
-                coins_amount=None,
-                duration_days=days
-            )
-            count += 1
-
-        await message.answer(
-            f"✅ <b>Ranklar muvaffaqiyatli qo'shildi!</b>\n\n"
-            f"Jami {count} ta variant yaratildi.\n\n"
-            f"⚠️ <i>Eslatma: Do'kondagi eski ranklarni o'chirib tashlashni unutmang.</i>",
-            parse_mode="HTML"
-        )
-    except Exception as e:
-        logger.error(f"Setup ranks failed: {e}")
-        await message.answer(f"❌ Xatolik yuz berdi: {e}")
-
-# ──────────────────────────────────────────────────────────────────────────────
 # RCON test
 # ──────────────────────────────────────────────────────────────────────────────
 

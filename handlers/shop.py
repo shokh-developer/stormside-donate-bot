@@ -37,8 +37,7 @@ async def cb_shop_main(call: CallbackQuery) -> None:
     await call.answer()
 
 
-@router.callback_query(F.data == "shop:ranks")
-async def cb_shop_ranks(call: CallbackQuery) -> None:
+async def _grouped_ranks() -> list:
     products = await repo.get_products(category="rank")
     seen: dict = {}
     grouped = []
@@ -51,6 +50,12 @@ async def cb_shop_ranks(call: CallbackQuery) -> None:
                 "name": p["name"].split(" (")[0],
                 "lp_group": key,
             })
+    return grouped
+
+
+@router.callback_query(F.data == "shop:ranks")
+async def cb_shop_ranks(call: CallbackQuery) -> None:
+    grouped = await _grouped_ranks()
     await call.message.edit_text(
         "⚔️ <b>Ranklar Do'koni</b>\n\n"
         "Qaysi rankni olmoqchisiz? Tanlang:",
@@ -81,6 +86,44 @@ async def cb_rank_select(call: CallbackQuery) -> None:
         f"Qaysi variantni tanlaysiz?",
         parse_mode="HTML",
         reply_markup=kb.rank_duration(monthly, permanent),
+    )
+    await call.answer()
+
+
+@router.callback_query(F.data == "shop:rank_features")
+async def cb_shop_rank_features(call: CallbackQuery) -> None:
+    grouped = await _grouped_ranks()
+    await call.message.edit_text(
+        "🏅 <b>Ranklar xususiyatlari</b>\n\n"
+        "Qaysi rank haqida batafsil ma'lumot olmoqchisiz?",
+        parse_mode="HTML",
+        reply_markup=kb.rank_list(grouped, prefix="rankinfo"),
+    )
+    await call.answer()
+
+
+@router.callback_query(F.data.startswith("rankinfo:"))
+async def cb_rank_info(call: CallbackQuery) -> None:
+    lp_group = call.data.split(":")[1]
+    products = await repo.get_products(category="rank")
+    monthly = next((p for p in products if p["lp_group"] == lp_group and p["duration_days"] == 30), None)
+    permanent = next((p for p in products if p["lp_group"] == lp_group and p["duration_days"] == 0), None)
+
+    if not monthly or not permanent:
+        await call.answer("Mahsulot topilmadi.", show_alert=True)
+        return
+
+    rank_name = monthly["name"].split(" (")[0]
+    rank_emoji = monthly["emoji"]
+
+    await call.message.edit_text(
+        f"{rank_emoji} <b>{rank_name}</b>\n\n"
+        f"💰 <b>Narxi:</b>\n"
+        f"⏳ 1 Oy — {int(monthly['price']):,} so'm\n"
+        f"♾️ Butunlay — {int(permanent['price']):,} so'm\n\n"
+        f"{monthly.get('description', '')}",
+        parse_mode="HTML",
+        reply_markup=kb.rank_duration(monthly, permanent, back_callback="shop:rank_features"),
     )
     await call.answer()
 
