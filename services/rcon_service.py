@@ -16,8 +16,8 @@ from config import config
 
 logger = logging.getLogger(__name__)
 
-_CONNECT_TIMEOUT = 3.0
-_CMD_TIMEOUT = 3.0
+_CONNECT_TIMEOUT = 8.0
+_CMD_TIMEOUT = 8.0
 
 
 class RCONService:
