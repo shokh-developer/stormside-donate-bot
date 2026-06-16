@@ -31,12 +31,6 @@ async def _top_donators_text() -> str:
     return "\n".join(lines)
 
 
-@router.message(F.text == "🏆 Top O'yinchilar")
-async def msg_top_donators(message: Message) -> None:
-    text = await _top_donators_text()
-    await message.answer(text, parse_mode="HTML", reply_markup=kb.back_home())
-
-
 @router.callback_query(F.data == "top_donators")
 async def cb_top_donators(call: CallbackQuery) -> None:
     text = await _top_donators_text()
@@ -46,17 +40,6 @@ async def cb_top_donators(call: CallbackQuery) -> None:
 # ──────────────────────────────────────────────────────────────────────────────
 # User Ticket Flow
 # ──────────────────────────────────────────────────────────────────────────────
-
-@router.message(F.text == "✍️ Bog'lanish")
-async def msg_support_ticket(message: Message, state: FSMContext) -> None:
-    await state.set_state(SupportState.waiting_for_ticket)
-    await message.answer(
-        "✍️ <b>Adminga xabar yozing</b>\n\n"
-        "Muammo yoki savolingizni batafsil tushuntiring.",
-        parse_mode="HTML",
-        reply_markup=kb.back_home(),
-    )
-
 
 @router.callback_query(F.data == "support_ticket")
 async def cb_support_ticket(call: CallbackQuery, state: FSMContext) -> None:

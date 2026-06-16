@@ -5,32 +5,29 @@ from __future__ import annotations
 
 from typing import List, Dict, Any, Optional
 
-from aiogram.types import (
-    InlineKeyboardMarkup, InlineKeyboardButton,
-    ReplyKeyboardMarkup, KeyboardButton,
-)
-from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Main Menu
 # ──────────────────────────────────────────────────────────────────────────────
 
-def main_menu() -> ReplyKeyboardMarkup:
-    builder = ReplyKeyboardBuilder()
-    builder.row(
-        KeyboardButton(text="🛒 Do'kon"),
-        KeyboardButton(text="👤 Profil"),
+def main_menu() -> InlineKeyboardMarkup:
+    kb = InlineKeyboardBuilder()
+    kb.row(
+        InlineKeyboardButton(text="🛒 Do'kon", callback_data="shop:main"),
+        InlineKeyboardButton(text="👤 Profil", callback_data="profile"),
     )
-    builder.row(
-        KeyboardButton(text="📋 Buyurtmalar"),
-        KeyboardButton(text="ℹ️ Ma'lumotlar"),
+    kb.row(
+        InlineKeyboardButton(text="📋 Buyurtmalar", callback_data="my_orders"),
+        InlineKeyboardButton(text="ℹ️ Ma'lumotlar", callback_data="help"),
     )
-    builder.row(
-        KeyboardButton(text="🏆 Top O'yinchilar"),
-        KeyboardButton(text="✍️ Bog'lanish"),
+    kb.row(
+        InlineKeyboardButton(text="🏆 Top O'yinchilar", callback_data="top_donators"),
+        InlineKeyboardButton(text="✍️ Bog'lanish", callback_data="support_ticket"),
     )
-    return builder.as_markup(resize_keyboard=True)
+    return kb.as_markup()
 
 
 def back_home() -> InlineKeyboardMarkup:

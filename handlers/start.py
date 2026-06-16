@@ -17,7 +17,7 @@ from db import repository as repo
 from keyboards import keyboards as kb
 from services.rcon_service import rcon
 from utils.helpers import (
-    STATUS_EMOJI, order_summary, profile_text, validate_mc_nickname, welcome_text
+    STATUS_EMOJI, profile_text, validate_mc_nickname, welcome_text
 )
 
 logger = logging.getLogger(__name__)
@@ -72,65 +72,8 @@ async def cb_home(call: CallbackQuery, db_user: dict) -> None:
         call.from_user.full_name,
         db_user.get("mc_nickname"),
     )
-    try:
-        await call.message.delete()
-    except Exception:
-        pass
-    await call.message.answer(text, reply_markup=kb.main_menu())
+    await call.message.edit_text(text, reply_markup=kb.main_menu())
     await call.answer()
-
-
-# ──────────────────────────────────────────────────────────────────────────────
-# Main-menu reply-keyboard handlers
-# ──────────────────────────────────────────────────────────────────────────────
-
-@router.message(F.text == "👤 Profil")
-async def msg_profile(message: Message, db_user: dict) -> None:
-    orders = await repo.get_user_orders(message.from_user.id, limit=100)
-    await message.answer(
-        profile_text(db_user, len(orders)),
-        parse_mode="HTML",
-        reply_markup=kb.profile_menu(has_nickname=bool(db_user.get("mc_nickname"))),
-    )
-
-
-@router.message(F.text == "📋 Buyurtmalar")
-async def msg_orders(message: Message) -> None:
-    orders = await repo.get_user_orders(message.from_user.id, limit=10)
-    if not orders:
-        text = (
-            "📋 <b>Buyurtmalar tarixi</b>\n\n"
-            "Sizda hali hech qanday buyurtma yo'q.\n"
-            "Do'kon bo'limiga o'ting!"
-        )
-    else:
-        lines = [f"📋 <b>Oxirgi {len(orders)} ta buyurtmalaringiz</b>\n"]
-        for o in orders:
-            emoji = STATUS_EMOJI.get(o["status"], "❓")
-            lines.append(
-                f"{emoji} <b>#{o['id']}</b>  {o.get('emoji', '🎮')} {o['product_name']}"
-                f"  — {o['created_at'][:10]}"
-            )
-        text = "\n".join(lines)
-    await message.answer(text, parse_mode="HTML", reply_markup=kb.back_home())
-
-
-@router.message(F.text == "ℹ️ Ma'lumotlar")
-async def msg_help(message: Message) -> None:
-    await message.answer(
-        "ℹ️ <b>Yordam va ko'p beriladigan savollar</b>\n\n"
-        "1️⃣ Profil bo'limida Minecraft Nicknameingizni bog'lang\n"
-        "2️⃣ Do'kondan Rank yoki tanga paketini tanlang\n"
-        "3️⃣ Click yoki Payme orqali to'lov qiling\n"
-        "4️⃣ To'lov chekini (screenshot) yuboring\n"
-        "5️⃣ Admin tekshiradi va buyurtmani tasdiqlaydi\n\n"
-        "━━━━━━━━━━━━━━━━━━━━\n"
-        "🌐 Server IP: <code>stormside.uz</code>\n"
-        "📞 Support: @shtursunov7\n"
-        "⏱ Rankni berish vaqti: odatda 1 soat ichida\n",
-        parse_mode="HTML",
-        reply_markup=kb.back_home(),
-    )
 
 
 # ──────────────────────────────────────────────────────────────────────────────
